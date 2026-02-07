@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Qibla Jayenamaz Compass</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  background: #0f3d2e;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+/* Kaaba at top */
+#qibla-icon {
+  font-size: 48px;
+  margin-top: 15px;
+}
+
+/* Compass container */
+#compass-container {
+  width: 300px;
+  height: 300px;
+  margin: 30px auto;
+  border-radius: 50%;
+  border: 8px solid #c9b458;
+  position: relative;
+  background: radial-gradient(circle, #1c5c44 60%, #0f3d2e 100%);
+  transition: transform 0.3s linear;
+}
+
+/* Fixed north arrow */
+#north-arrow {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 36px;
+}
+
+/* Direction text */
+#info {
+  margin-top: 20px;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="qibla-icon">🕋</div>
+<p>Rotate your body until 🕋 is straight ahead</p>
+
+<div id="compass-container">
+  <div id="north-arrow">⬆️</div>
+</div>
+
+<div id="info">Waiting for sensors...</div>
+
+<script>
+const kaabaLat = 21.422487;
+const kaabaLng = 39.826206;
+
+let userLat, userLng, qiblaBearing = 0;
+
+// Get GPS
+navigator.geolocation.getCurrentPosition(pos => {
+  userLat = pos.coords.latitude;
+  userLng = pos.coords.longitude;
+  qiblaBearing = calculateBearing(userLat, userLng, kaabaLat, kaabaLng);
+  document.getElementById("info").innerText = "Location detected ✔";
+}, () => {
+  document.getElementById("info").innerText = "Location permission required";
+});
+
+// Bearing calculation
+function calculateBearing(lat1, lon1, lat2, lon2) {
+  lat1 *= Math.PI/180;
+  lat2 *= Math.PI/180;
+  let dLon = (lon2-lon1)*Math.PI/180;
+  let y = Math.sin(dLon)*Math.cos(lat2);
+  let x = Math.cos(lat1)*Math.sin(lat2) -
+          Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return (Math.atan2(y,x)*180/Math.PI + 360) % 360;
+}
+
+// Device compass
+window.addEventListener("deviceorientationabsolute", e => {
+  if (!userLat) return;
+
+  let heading = e.alpha; // phone heading
+  let rotation = qiblaBearing - heading;
+
+  // Rotate compass like a clock
+  document.getElementById("compass-container")
+    .style.transform = `rotate(${rotation}deg)`;
+}, true);
+</script>
+
+</body>
+</html>
